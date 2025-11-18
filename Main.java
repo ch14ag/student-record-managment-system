@@ -1,7 +1,6 @@
-
-
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
@@ -12,6 +11,7 @@ import java.util.Scanner;
 public class Main {
     private static final Scanner scanner = new Scanner(System.in);
     private static final StudentManager manager = new StudentManager();
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
     public static void main(String[] args) {
         System.out.println("Welcome to the Student Record Management System (simple CLI)");
@@ -54,9 +54,9 @@ public class Main {
         try {
             String first = prompt("First name");
             String last = prompt("Last name");
-            LocalDate dob = readDate("Date of birth (yyyy-MM-dd)");
+            LocalDate dob = readDate("Date of birth (dd-MM-yyyy)");
             String major = prompt("Major (press enter for none)");
-            double gpa = readDouble("GPA (0.0 - 4.0)", 0.0, 4.0);
+            double gpa = readDouble("CGPA (0.0 - 10.0)", 0.0, 10.0);
             var s = manager.addStudent(first, last, dob, major, gpa);
             System.out.println("Added: " + s);
         } catch (IllegalArgumentException e) {
@@ -75,7 +75,7 @@ public class Main {
         System.out.println("Current: " + s);
         String first = prompt("New first name (leave blank to keep)");
         String last = prompt("New last name (leave blank to keep)");
-        String dobStr = prompt("New dob yyyy-MM-dd (leave blank to keep)");
+            String dobStr = prompt("New dob dd-MM-yyyy (leave blank to keep)");
         LocalDate dob = null;
         if (!dobStr.isBlank()) {
             try {
@@ -195,7 +195,7 @@ public class Main {
         while (true) {
             String s = prompt(label);
             try {
-                return LocalDate.parse(s);
+                return LocalDate.parse(s, DATE_FORMAT);
             } catch (DateTimeParseException e) {
                 System.out.println("Date must be in yyyy-MM-dd format.");
             }
