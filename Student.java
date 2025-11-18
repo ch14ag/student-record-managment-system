@@ -1,3 +1,4 @@
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -14,7 +15,7 @@ public class Student implements Comparable<Student> {
     private String major;
     private double gpa;
 
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE;
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
     public Student() {}
 
@@ -89,8 +90,8 @@ public class Student implements Comparable<Student> {
     }
 
     public final void setGpa(double gpa) {
-        if (gpa < 0.0 || gpa > 4.0) {
-            throw new IllegalArgumentException("gpa must be between 0.0 and 4.0");
+        if (gpa < 0.0 || gpa > 10.0) {
+            throw new IllegalArgumentException("gpa must be between 0.0 and 10.0");
         }
         this.gpa = gpa;
     }
