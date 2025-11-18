@@ -1,4 +1,3 @@
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -73,7 +72,7 @@ public class Student implements Comparable<Student> {
         try {
             setDateOfBirth(LocalDate.parse(isoDate, DATE_FORMAT));
         } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("dateOfBirth must be in DD-MM-yyyy format");
+            throw new IllegalArgumentException("dateOfBirth must be in yyyy-MM-dd format");
         }
     }
 
@@ -90,8 +89,8 @@ public class Student implements Comparable<Student> {
     }
 
     public final void setGpa(double gpa) {
-        if (gpa < 0.0 || gpa > 10.0) {
-            throw new IllegalArgumentException("CGPA must be between 0.0 and 10.0");
+        if (gpa < 0.0 || gpa > 4.0) {
+            throw new IllegalArgumentException("gpa must be between 0.0 and 4.0");
         }
         this.gpa = gpa;
     }
@@ -130,5 +129,72 @@ public class Student implements Comparable<Student> {
         return Objects.hash(id);
     }
 
-    // CSV support removed
+    // CSV helpers: id,first,last,yyyy-MM-dd,major,gpa
+    public String toCsvLine() {
+        return String.format("%d,%s,%s,%s,%s,%.2f",
+                id,
+                escapeCsv(firstName),
+                escapeCsv(lastName),
+                (dateOfBirth == null ? "" : dateOfBirth.format(DATE_FORMAT)),
+                escapeCsv(major),
+                gpa);
+    }
+
+    private static String escapeCsv(String s) {
+        if (s == null) return "";
+        return s.replace(",", "\\,");
+    }
+
+    private static String unescapeCsv(String s) {
+        if (s == null) return "";
+        return s.replace("\\,", ",");
+    }
+
+    public static Student fromCsvLine(String line) {
+        // naive split which respects escaped commas
+        String[] parts = splitCsvLine(line);
+        if (parts.length < 6) {
+            throw new IllegalArgumentException("Invalid CSV line (expected 6 fields): " + line);
+        }
+        Student s = new Student();
+        s.id = Integer.parseInt(parts[0]);
+        s.firstName = unescapeCsv(parts[1]);
+        s.lastName = unescapeCsv(parts[2]);
+        if (!parts[3].isBlank()) {
+            s.dateOfBirth = LocalDate.parse(parts[3], DATE_FORMAT);
+        }
+        s.major = unescapeCsv(parts[4]);
+        s.gpa = Double.parseDouble(parts[5]);
+        return s;
+    }
+
+    private static String[] splitCsvLine(String line) {
+        // simple parser handling escaped commas "\,"
+        java.util.List<String> parts = new java.util.ArrayList<>();
+        StringBuilder cur = new StringBuilder();
+        boolean escape = false;
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (escape) {
+                if (c == ',') {
+                    cur.append(',');
+                } else {
+                    // backslash was literal
+                    cur.append('\\').append(c);
+                }
+                escape = false;
+            } else {
+                if (c == '\\') {
+                    escape = true;
+                } else if (c == ',') {
+                    parts.add(cur.toString());
+                    cur.setLength(0);
+                } else {
+                    cur.append(c);
+                }
+            }
+        }
+        parts.add(cur.toString());
+        return parts.toArray(new String[0]);
+    }
 }
