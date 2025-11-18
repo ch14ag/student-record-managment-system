@@ -1,10 +1,14 @@
 
+
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 
+/**
+ * Simple CLI to interact with StudentManager.
+ */
 public class Main {
     private static final Scanner scanner = new Scanner(System.in);
     private static final StudentManager manager = new StudentManager();
@@ -22,6 +26,8 @@ public class Main {
                 case "4" -> handleView();
                 case "5" -> handleList();
                 case "6" -> handleSearch();
+                case "7" -> handleSave();
+                case "8" -> handleLoad();
                 case "0" -> {
                     running = false;
                     System.out.println("Bye.");
@@ -39,7 +45,8 @@ public class Main {
         System.out.println("4) View student by ID");
         System.out.println("5) List all students");
         System.out.println("6) Search by name");
-        // CSV persistence removed
+        System.out.println("7) Save to CSV");
+        System.out.println("8) Load from CSV");
         System.out.println("0) Exit");
     }
 
@@ -47,9 +54,9 @@ public class Main {
         try {
             String first = prompt("First name");
             String last = prompt("Last name");
-            LocalDate dob = readDate("Date of birth (DD-MM-yyyy)");
+            LocalDate dob = readDate("Date of birth (yyyy-MM-dd)");
             String major = prompt("Major (press enter for none)");
-            double gpa = readDouble("CGPA (0.0 - 10.0)", 0.0, 10.0);
+            double gpa = readDouble("GPA (0.0 - 4.0)", 0.0, 4.0);
             var s = manager.addStudent(first, last, dob, major, gpa);
             System.out.println("Added: " + s);
         } catch (IllegalArgumentException e) {
@@ -68,7 +75,7 @@ public class Main {
         System.out.println("Current: " + s);
         String first = prompt("New first name (leave blank to keep)");
         String last = prompt("New last name (leave blank to keep)");
-        String dobStr = prompt("New dob (DD-MM-yyyy) (leave blank to keep)");
+        String dobStr = prompt("New dob yyyy-MM-dd (leave blank to keep)");
         LocalDate dob = null;
         if (!dobStr.isBlank()) {
             try {
@@ -79,13 +86,13 @@ public class Main {
             }
         }
         String major = prompt("New major (leave blank to keep)");
-        String gpaStr = prompt("New CGPA (0.0 - 10.0) (leave blank to keep)");
+        String gpaStr = prompt("New GPA (leave blank to keep)");
         Double gpa = null;
         if (!gpaStr.isBlank()) {
             try {
                 gpa = Double.parseDouble(gpaStr);
             } catch (NumberFormatException e) {
-                System.out.println("Invalid CGPA. Update cancelled.");
+                System.out.println("Invalid GPA. Update cancelled.");
                 return;
             }
         }
@@ -130,7 +137,26 @@ public class Main {
             results.forEach(System.out::println);
         }
     }
-    
+
+    private static void handleSave() {
+        String path = prompt("Path to save CSV (e.g., students.csv)");
+        try {
+            manager.saveToCsv(path);
+            System.out.println("Saved to " + path);
+        } catch (Exception e) {
+            System.out.println("Failed to save: " + e.getMessage());
+        }
+    }
+
+    private static void handleLoad() {
+        String path = prompt("Path to load CSV (e.g., students.csv)");
+        try {
+            manager.loadFromCsv(path);
+            System.out.println("Loaded from " + path);
+        } catch (Exception e) {
+            System.out.println("Failed to load: " + e.getMessage());
+        }
+    }
 
     // helpers
     private static String prompt(String label) {
@@ -171,7 +197,7 @@ public class Main {
             try {
                 return LocalDate.parse(s);
             } catch (DateTimeParseException e) {
-                System.out.println("Date must be in DD-MM-yyyy format.");
+                System.out.println("Date must be in yyyy-MM-dd format.");
             }
         }
     }
