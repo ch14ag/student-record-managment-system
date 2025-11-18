@@ -1,8 +1,16 @@
-
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Manages Students in memory. Demonstrates Single Responsibility:
+ * this class handles student collection operations.
+ */
 public class StudentManager {
     private final Map<Integer, Student> students = new HashMap<>();
     private int nextId = 1;
@@ -51,5 +59,34 @@ public class StudentManager {
         }
     }
 
-    // CSV persistence removed
+    // Persistence: save/load CSV
+    public synchronized void saveToCsv(String path) throws IOException {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(path))) {
+            // header optional
+            bw.write("#id,firstName,lastName,dob,major,gpa");
+            bw.newLine();
+            for (Student s : listAll()) {
+                bw.write(s.toCsvLine());
+                bw.newLine();
+            }
+        }
+    }
+
+    public synchronized void loadFromCsv(String path) throws IOException {
+        Map<Integer, Student> loaded = new HashMap<>();
+        int maxId = 0;
+        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                line = line.strip();
+                if (line.isEmpty() || line.startsWith("#")) continue;
+                Student s = Student.fromCsvLine(line);
+                loaded.put(s.getId(), s);
+                if (s.getId() > maxId) maxId = s.getId();
+            }
+        }
+        students.clear();
+        students.putAll(loaded);
+        nextId = Math.max(nextId, maxId + 1);
+    }
 }
